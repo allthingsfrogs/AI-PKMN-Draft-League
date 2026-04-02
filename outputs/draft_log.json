@@ -1,0 +1,16 @@
+{
+    "draft_date": "",
+    "picks": [
+        {
+            "pick_num" : 1,
+            "round": 1,
+            "coach": "",
+            "personality": "",
+            "pokemon": "",
+            "cost": 0,
+            "budget_remaining": 0,
+            "reasoning": "",
+            "was_fallback": ""
+        }
+    ]
+}

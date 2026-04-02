@@ -27,4 +27,4 @@ class Coach:
         return pokemon.cost <= self.remaining_budget - min_reserve
     
     def draft(self, pokemon: Pokemon):
-        self.roster.appen(pokemon)
+        self.roster.append(pokemon)

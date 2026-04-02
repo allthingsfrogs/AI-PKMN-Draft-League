@@ -17,17 +17,20 @@ building battle rosters, and playing Doubles matches on a local Pokémon Showdow
 ## 2. League Rules (from Wolfey Draft League)
 
 ### Draft
+
 - 8 coaches, snake draft format (1→8, 8→1, repeat)
 - Draft order is randomized
 - Each coach drafts 10 Pokémon with a 100-point budget
 - Pokémon cost 1–20 points (tiers defined in draft board CSV)
 
 ### Free Agency & Trades
+
 - 6 free agency pickups per team, allowed through end of Week 3
 - 6 inter-team trades per team, allowed through end of Week 3
 - 24-hour grace period after Week 3: unlimited FA and trades
 
 ### Battles
+
 - VGC Doubles format, Level 50
 - Best-of-3 each week
 - Bring 6 Pokémon to each battle (from roster of 10)
@@ -35,12 +38,14 @@ building battle rosters, and playing Doubles matches on a local Pokémon Showdow
 - Standard VGC rules and clauses
 
 ### Scoring
+
 - 2-0 win = 3 pts
 - 2-1 win = 2 pts
 - 1-2 loss = 1 pt
 - 0-2 loss = 0 pts
 
 ### Tiebreakers (in order)
+
 1. Wins
 2. Points
 3. Differential
@@ -48,6 +53,7 @@ building battle rosters, and playing Doubles matches on a local Pokémon Showdow
 5. Strength of schedule
 
 ### Playoffs
+
 - Top 4 coaches qualify
 - Seed 1 vs Seed 4, Seed 2 vs Seed 3
 - 6-week regular season
@@ -95,6 +101,7 @@ Five layers, each with a clear responsibility:
 ```
 
 ### What talks to what
+
 - **Your code → Claude API**: Prompts containing game state → JSON decisions back
 - **Your code → Showdown**: Battle commands via WebSocket → State updates back
 - **Your browser → Showdown**: Spectate live at localhost:8000
@@ -105,6 +112,7 @@ Five layers, each with a clear responsibility:
 ## 4. Data Model
 
 ### Pokemon
+
 ```python
 @dataclass
 class Pokemon:
@@ -113,6 +121,7 @@ class Pokemon:
 ```
 
 ### Coach
+
 ```python
 @dataclass
 class Coach:
@@ -125,17 +134,21 @@ class Coach:
 ```
 
 Key methods:
+
 - `remaining_budget` — budget minus sum of roster costs
 - `can_afford(pokemon)` — checks cost against budget, reserving 1 pt per remaining pick
 - `draft(pokemon)` — adds to roster, no validation (engine handles that)
 
 ### DraftEngine
+
 Manages the draft pool and snake order:
+
 - `get_draft_order()` — generates 80-pick snake sequence (10 rounds × 8 coaches)
 - `remove_pokemon(name)` — pops from available pool
 - `get_available_for_coach(coach)` — filters by affordability
 
 ### SeasonManager (later milestone)
+
 Tracks weekly schedule, standings, tiebreakers, and playoff bracket.
 
 ---
@@ -143,17 +156,20 @@ Tracks weekly schedule, standings, tiebreakers, and playoff bracket.
 ## 5. Agent Design
 
 ### How agents work
+
 An agent wraps a Claude API call with league-aware context. It does NOT call any
 external service — it receives a text description of the current state and returns
 a JSON decision. Your Python code handles all external interaction.
 
 ### DraftAgent
+
 ```
 Input:  available pool (grouped by cost), current roster, budget, opponent rosters
 Output: {"pick": "Pokemon Name", "reasoning": "..."}
 ```
 
 ### BattleAgent (later milestone)
+
 ```
 Input:  Doubles field state — 2 active mons per side, HP, weather, terrain, boosts,
         available moves with targets, switch options
@@ -163,6 +179,7 @@ Output: {"slot1": {"action": "move", "target": "Rage Fist", "tera": false},
 ```
 
 ### TradeAgent (later milestone)
+
 ```
 Input:  own roster, opponent roster, league context
 Output: {"propose": true, "offer": "...", "want": "...", "reasoning": "..."}
@@ -170,16 +187,22 @@ Output: {"propose": true, "offer": "...", "want": "...", "reasoning": "..."}
 ```
 
 ### Personality system
+
 Each agent gets a personality string that shapes its strategy. Examples:
+
 - Aggressive: prioritizes speed, sweepers, setup, burst damage
 - Defensive: prioritizes bulk, Intimidate, redirection, recovery
 - Weather: builds around sun/rain/sand/hail setters and abusers
 - Wildcard: takes creative risks, niche picks, surprise strategies
+- Bulky Offense: priotitizes bulk, attack, longevity, offense
+- All Arounder: builds around type balance, type coverage, flexiblilty
+- Memer: no strategy, plays for entertainment value, memorable moments, novel plays
 
 Personalities are just prompt strings stored in personalities.py. Tuning them is
 the main way you improve agent behavior over time.
 
 ### Knowledge layers (for battle agents)
+
 1. **Built-in** — Claude already knows type matchups, common sets, VGC fundamentals
 2. **System prompt docs** — Your reference files: speed tiers, meta threats, league pool
 3. **Scouting data** — Per-opponent history built from match results (what they brought, Tera usage, lead patterns)
@@ -189,6 +212,7 @@ the main way you improve agent behavior over time.
 ## 6. Showdown Integration (later milestone)
 
 ### Local server setup
+
 ```bash
 git clone https://github.com/smogon/pokemon-showdown.git
 cd pokemon-showdown
@@ -197,10 +221,12 @@ node pokemon-showdown start --no-security
 ```
 
 ### Agent connection
+
 Use the `poke-env` Python library. Each agent is a subclass of `poke_env.Player`
 with its own Showdown account. You override `choose_move(battle)` to call Claude.
 
 ### Doubles battle turn cycle
+
 1. Showdown sends field state (2 mons per side, HP, weather, terrain, boosts)
 2. Python parses into readable text description
 3. Claude picks 2 actions (one per active slot) + targeting + Tera decision
@@ -209,6 +235,7 @@ with its own Showdown account. You override `choose_move(battle)` to call Claude
 6. Repeat until one side is out of Pokémon
 
 ### Spectating
+
 Open localhost:8000 in your browser. You'll see the battle room with full
 animations, HP bars, move announcements. Replays are saved automatically.
 
@@ -246,7 +273,9 @@ wolfey-draft-ai/
 ## 8. Milestones (build in this order)
 
 ### Milestone 1 — One agent, one pick
+
 **Goal**: Prove the core concept works.
+
 - [ ] Parse draft board CSV into list[Pokemon] with names and costs
 - [ ] Create Coach dataclass with budget tracking
 - [ ] Make one Claude API call with the available pool
@@ -257,7 +286,9 @@ wolfey-draft-ai/
 **Claude helps with**: agents.py, prompt structure, debugging
 
 ### Milestone 2 — Full draft simulation
+
 **Goal**: 8 agents complete a 10-round snake draft.
+
 - [ ] Build DraftEngine with snake order and pick validation
 - [ ] Create 4–8 agents with distinct personalities
 - [ ] Run the full 80-pick draft in a loop
@@ -270,14 +301,18 @@ validate picks against the available list and have a fallback (pick the
 highest-cost affordable Pokémon).
 
 ### Milestone 3 — Trades and free agency
+
 **Goal**: Agents negotiate roster changes.
+
 - [ ] Implement propose_trade() — Agent A proposes, Agent B evaluates
 - [ ] Implement free_agency_pick() — Agent evaluates drops and pickups
 - [ ] Track trade/FA counts per coach (6 each, through Week 3)
 - [ ] Log all transactions
 
 ### Milestone 4 — Season management
+
 **Goal**: Automate the weekly schedule and standings.
+
 - [ ] Build round-robin schedule (6 weeks, 4 matchups per week)
 - [ ] Implement scoring (3/2/1/0 points)
 - [ ] Implement tiebreaker logic
@@ -285,7 +320,9 @@ highest-cost affordable Pokémon).
 - [ ] Track and display standings after each week
 
 ### Milestone 5 — Showdown battles
+
 **Goal**: Agents play actual VGC Doubles matches.
+
 - [ ] Install and run local Showdown server
 - [ ] Install poke-env, create bot accounts
 - [ ] Write state_formatter.py — converts poke-env Battle → text prompt
@@ -295,7 +332,9 @@ highest-cost affordable Pokémon).
 - [ ] Wire into season manager for automated weekly matchups
 
 ### Milestone 6 — Scouting and adaptation
+
 **Goal**: Agents learn from match history.
+
 - [ ] Record what each coach brings, leads with, Teras
 - [ ] Build per-opponent scouting reports
 - [ ] Feed scouting data into pre-match team selection prompts
@@ -306,16 +345,17 @@ highest-cost affordable Pokémon).
 ## 9. Cost Estimates
 
 Using Claude Sonnet (recommended for this project):
+
 - Input: $3 / million tokens
 - Output: $15 / million tokens
 
-| Activity                    | Tokens per instance | Instances per season | Estimated cost |
-|-----------------------------|--------------------:|---------------------:|---------------:|
-| Draft pick                  | ~4,000              | 80                   | ~$1            |
-| Trade negotiation           | ~3,000              | ~50                  | ~$0.50         |
-| Battle turn (Doubles)       | ~4,000              | ~3,000               | ~$40           |
-| Team selection              | ~3,000              | ~60                  | ~$0.60         |
-| **Full season total**       |                     |                      | **~$40–80**    |
+| Activity              | Tokens per instance | Instances per season | Estimated cost |
+| --------------------- | ------------------: | -------------------: | -------------: |
+| Draft pick            |              ~4,000 |                   80 |            ~$1 |
+| Trade negotiation     |              ~3,000 |                  ~50 |         ~$0.50 |
+| Battle turn (Doubles) |              ~4,000 |               ~3,000 |           ~$40 |
+| Team selection        |              ~3,000 |                  ~60 |         ~$0.60 |
+| **Full season total** |                     |                      |    **~$40–80** |
 
 With prompt caching (90% discount on repeated system prompts): **~$15–30**
 
@@ -323,12 +363,12 @@ With prompt caching (90% discount on repeated system prompts): **~$15–30**
 
 ## 10. Key Dependencies
 
-| Package             | What it does                          | When you need it   |
-|---------------------|---------------------------------------|--------------------|
-| `anthropic`         | Claude API client                     | Milestone 1        |
-| `python-dotenv`     | Load API key from .env                | Milestone 1        |
-| `poke-env`          | Showdown WebSocket client + state     | Milestone 5        |
-| `pokemon-showdown`  | Local battle server (Node.js)         | Milestone 5        |
+| Package            | What it does                      | When you need it |
+| ------------------ | --------------------------------- | ---------------- |
+| `anthropic`        | Claude API client                 | Milestone 1      |
+| `python-dotenv`    | Load API key from .env            | Milestone 1      |
+| `poke-env`         | Showdown WebSocket client + state | Milestone 5      |
+| `pokemon-showdown` | Local battle server (Node.js)     | Milestone 5      |
 
 ---
 
